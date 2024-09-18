@@ -1,18 +1,18 @@
 <script lang="ts">
     import { onMount } from "svelte";
 
-    let fullState: number[] = [];
+    let fullState: number[] = $state([]);
     let state: number[] = $state([]);
     let clientSocket: any = null;
     const originalLength = 1000000;
     const batchSize = 1000;
 
     const checkedCount = $derived((() => {
-        if(!state.length) {
+        if(!fullState.length) {
             return 0;
         }
 
-        return state.reduce((acc, item) => acc + item, 0);
+        return fullState.reduce((acc, item) => acc + item, 0);
     })());
     
     function unpackState(packedState: Uint8Array, originalLength: number): Uint8Array {
@@ -38,7 +38,7 @@
 
         const isChecked = event.target.checked;
         const buffer = new ArrayBuffer(5);
-        const view = new DataView(buffer);
+        const view = new DataView(buffer); 
 
         event.target.checked = !isChecked;
 
@@ -49,7 +49,7 @@
     }
 
     onMount(() => {
-        const socket = new WebSocket("ws://localhost:8080");
+        const socket = new WebSocket(`ws://${window.location.hostname}:8080`);
         socket.binaryType = "arraybuffer";
 
         clientSocket = socket;
@@ -62,7 +62,8 @@
                 const value = view.getUint8(4); 
 
                 state[index] = value;
-
+                fullState[index] = value;
+                
                 return;
             }
 
